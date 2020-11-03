@@ -338,7 +338,7 @@ class SynGCN(nn.Module):
 
         final_hidden = self.out_mlp(final_hidden)
         logits = self.linear(final_hidden)
-        return logits, torch.cat([subj_out, obj_out] , dim=1), h_out, outputs_e
+        return logits, torch.cat([subj_out, obj_out] , dim=1), h_out, outputs
 
 class Attention(nn.Module):
     """
