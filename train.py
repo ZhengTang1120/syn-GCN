@@ -204,12 +204,12 @@ for epoch in range(1, opt['num_epoch']+1):
     if epoch % opt['save_epoch'] != 0:
         os.remove(model_file)
     # lr schedule
-    if len(dev_f1_history) > 5 and dev_f1 <= dev_f1_history[-1] and \
+    if len(dev_f1_history) > 5 and bleu <= dev_f1_history[-1] and \
             opt['optim'] in ['sgd', 'adagrad']:
         current_lr *= opt['lr_decay']
         model.update_lr(current_lr)
 
-    dev_f1_history += [dev_f1]
+    dev_f1_history += [bleu]
     print("")
 
 print("Training ended with {} epochs.".format(epoch))
