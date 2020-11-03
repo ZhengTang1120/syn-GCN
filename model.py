@@ -465,8 +465,8 @@ class Decoder(nn.Module):
 
         self.embed = nn.Embedding(self.output_size, self.embed_size, padding_idx=constant.PAD_ID)
         self.dropout = nn.Dropout(opt['dropout'], inplace=True)
-        self.attention = Attention(2 * self.hidden_size, self.embed_size + 2 * self.hidden_size)
-        self.rnn = nn.LSTM(self.embed_size + 2 * self.hidden_size, self.hidden_size,
+        self.attention = Attention(self.hidden_size, self.embed_size + 2 * self.hidden_size)
+        self.rnn = nn.LSTM(self.embed_size + self.hidden_size, self.hidden_size,
                           self.n_layers, dropout=opt['dropout'])
         self.out = nn.Linear(self.hidden_size, self.output_size)
 
