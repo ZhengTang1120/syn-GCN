@@ -138,19 +138,19 @@ max_steps = len(train_batch) * opt['num_epoch']
 for epoch in range(1, opt['num_epoch']+1):
     train_loss = 0
     epoch_start_time = time.time()
-    for batch in train_batch.data:
-        start_time = time.time()
-        global_step += 1
-        loss = model.update(batch, False)
-        train_loss += loss
-        if global_step % opt['log_step'] == 0:
-            duration = time.time() - start_time
-            print(format_str.format(datetime.now(), global_step, max_steps, epoch,\
-                    opt['num_epoch'], loss, duration, current_lr))
+    # for batch in train_batch.data:
+    #     start_time = time.time()
+    #     global_step += 1
+    #     loss = model.update(batch, False)
+    #     train_loss += loss
+    #     if global_step % opt['log_step'] == 0:
+    #         duration = time.time() - start_time
+    #         print(format_str.format(datetime.now(), global_step, max_steps, epoch,\
+    #                 opt['num_epoch'], loss, duration, current_lr))
     for batch in train_batch.data_r:
         start_time = time.time()
         global_step += 1
-        loss = model.update(batch, False)
+        loss = model.update(batch, True)
         train_loss += loss
         if global_step % opt['log_step'] == 0:
             duration = time.time() - start_time
@@ -163,32 +163,32 @@ for epoch in range(1, opt['num_epoch']+1):
     dev_loss = 0
     references = []
     candidates = []
-    for batch in dev_batch.data:
-        preds, _, _, loss = model.predict(batch, False)
-        predictions += preds
-        dev_loss += loss
+    # for batch in dev_batch.data:
+    #     preds, _, _, loss = model.predict(batch, False)
+    #     predictions += preds
+    #     dev_loss += loss
     for batch in dev_batch.data_r:
-        preds, _, outputs, loss = model.predict(batch, False)
+        preds, _, outputs, loss = model.predict(batch, True)
         predictions += preds
         dev_loss += loss
-        # batch_size = len(preds)
-        # rules = batch.rule.view(batch_size, -1)
-        # for i in range(batch_size):
-        #     output = outputs.transpose(0, 1)[i]
-        #     reference = [[vocab.id2rule[int(r)] for r in rules[i].tolist()[1:] if r not in [0,3]]]
-        #     candidate = []
-        #     for r in output.tolist()[1:]:
-        #         if int(r) == 3:
-        #             break
-        #         else:
-        #             candidate.append(vocab.id2rule[int(r)])
-        #     # print (reference)
-        #     # print (candidate)
-        #     references.append(reference)
-        #     candidates.append(candidate)
+        batch_size = len(preds)
+        rules = batch.rule.view(batch_size, -1)
+        for i in range(batch_size):
+            output = outputs.transpose(0, 1)[i]
+            reference = [[vocab.id2rule[int(r)] for r in rules[i].tolist()[1:] if r not in [0,3]]]
+            candidate = []
+            for r in output.tolist()[1:]:
+                if int(r) == 3:
+                    break
+                else:
+                    candidate.append(vocab.id2rule[int(r)])
+            # print (reference)
+            # print (candidate)
+            references.append(reference)
+            candidates.append(candidate)
     predictions = [id2label[p] for p in predictions]
     dev_p, dev_r, dev_f1 = scorer.score(dev_batch.gold(), predictions)
-    bleu = 0 #corpus_bleu(references, candidates)
+    bleu = corpus_bleu(references, candidates)
     train_loss = train_loss / train_batch.num_examples * opt['batch_size'] # avg loss per batch
     dev_loss = dev_loss / dev_batch.num_examples * opt['batch_size']
     epoch_duration = time.time() - epoch_start_time
