@@ -14,6 +14,7 @@ from loader import BatchLoader
 from model import RelationModel
 from utils import torch_utils, scorer, constant, helper
 from utils.vocab import Vocab
+from nltk.translate.bleu_score import corpus_bleu, sentence_bleu
 
 parser = argparse.ArgumentParser()
 parser.add_argument('model_dir', type=str, help='Directory of the model.')
