@@ -42,7 +42,7 @@ model = RelationModel(opt)
 model.load(model_file)
 
 # load vocab
-vocab_file = args.model_dir + '/vocab.pkl'
+vocab_file = 'vocab/vocab.pkl'
 vocab = Vocab(vocab_file, load=True)
 assert opt['vocab_size'] == vocab.size, "Vocab size must match that in the saved model."
 
@@ -56,13 +56,35 @@ id2label = dict([(v,k) for k,v in constant.LABEL_TO_ID.items()])
 
 predictions = []
 all_probs = []
-for batch in eval_batch.data:
-    preds, probs, _ = model.predict(batch)
+references = []
+candidates = []
+# for batch in eval_batch.data:
+#     preds, probs, _ = model.predict(batch, False)
+#     predictions += preds
+#     all_probs += probs
+for batch in eval_batch.data_r:
+    preds, probs, _ = model.predict(batch, True)
     predictions += preds
     all_probs += probs
+    batch_size = len(preds)
+    rules = batch.rule.view(batch_size, -1)
+    for i in range(batch_size):
+        output = outputs.transpose(0, 1)[i]
+        reference = [[vocab.id2rule[int(r)] for r in rules[i].tolist()[1:] if r not in [0,3]]]
+        candidate = []
+        for r in output.tolist()[1:]:
+            if int(r) == 3:
+                break
+            else:
+                candidate.append(vocab.id2rule[int(r)])
+        # print (reference)
+        # print (candidate)
+        references.append(reference)
+        candidates.append(candidate)
 predictions = [id2label[p] for p in predictions]
 p, r, f1 = scorer.score(eval_batch.gold(), predictions, verbose=True)
-print("{} set evaluate result: {:.2f}\t{:.2f}\t{:.2f}".format(args.dataset,p,r,f1))
+bleu = corpus_bleu(references, candidates)
+print("{} set evaluate result: {:.2f}\t{:.2f}\t{:.2f}\t{:.4f}".format(args.dataset,p,r,f1,bleu))
 
 print("Evaluation ended.")
 

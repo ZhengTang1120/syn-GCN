@@ -86,7 +86,7 @@ class Vocab(object):
             print("Overwriting old vocab file at " + filename)
             os.remove(filename)
         with open(filename, 'wb') as outfile:
-            pickle.dump(self.id2word, outfile)
+            pickle.dump((self.id2word, self.id2rule), outfile)
         return
 
     def map(self, token_list):
