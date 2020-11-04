@@ -63,7 +63,7 @@ candidates = []
 #     predictions += preds
 #     all_probs += probs
 for batch in eval_batch.data_r:
-    preds, probs, _ = model.predict(batch, True)
+    preds, probs, outputs, loss = model.predict(batch, True)
     predictions += preds
     all_probs += probs
     batch_size = len(preds)
