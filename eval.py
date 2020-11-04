@@ -49,7 +49,7 @@ assert opt['vocab_size'] == vocab.size, "Vocab size must match that in the saved
 # load data
 data_file = opt['data_dir'] + '/{}.json'.format(args.dataset)
 print("Loading data from {} with batch size {}...".format(data_file, opt['batch_size']))
-eval_batch = BatchLoader(data_file, opt['batch_size'], opt, vocab, evaluation=True)
+eval_batch = BatchLoader(data_file, opt['batch_size'], opt, vocab, 'tacred/mappings_dev.txt', evaluation=True)
 
 helper.print_config(opt)
 id2label = dict([(v,k) for k,v in constant.LABEL_TO_ID.items()])
