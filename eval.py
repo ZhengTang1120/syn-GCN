@@ -64,6 +64,7 @@ candidates = []
 #     predictions += preds
 #     all_probs += probs
 randomlist = random.sample(range(len(eval_batch.data_r)), 20)
+print (randomlist)
 for batch in eval_batch.data_r:
     preds, probs, outputs, loss = model.predict(batch, True)
     predictions += preds
