@@ -78,9 +78,10 @@ for batch in eval_batch.data_r:
                 break
             else:
                 candidate.append(vocab.id2rule[int(r)])
-        print (reference[0])
-        print (candidate)
-        print ()
+        if reference[0] != candidate:
+            print (reference[0])
+            print (candidate)
+            print ()
         references.append(reference)
         candidates.append(candidate)
 predictions = [id2label[p] for p in predictions]
