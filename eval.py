@@ -79,7 +79,7 @@ for batch in eval_batch.data_r:
             else:
                 candidate.append(vocab.id2rule[int(r)])
         if reference[0] != candidate:
-            print (id2label[batch.rel[i]], id2label[preds[i]])
+            print (id2label[batch.rel.tolist()[i]], id2label[preds[i]])
             print ([vocab.id2word[w] for w in batch.words.view(batch_size, -1)[i].tolist() if w != 0])
             print (reference[0])
             print (candidate)
