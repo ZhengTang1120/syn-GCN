@@ -63,6 +63,7 @@ candidates = []
 #     preds, probs, _ = model.predict(batch, False)
 #     predictions += preds
 #     all_probs += probs
+randomlist = random.sample(range(len(eval_batch.data_r)), 20)
 for batch in eval_batch.data_r:
     preds, probs, outputs, loss = model.predict(batch, True)
     predictions += preds
@@ -78,7 +79,7 @@ for batch in eval_batch.data_r:
                 break
             else:
                 candidate.append(vocab.id2rule[int(r)])
-        if reference[0] != candidate:
+        if i in randomlist:
             print (id2label[batch.rel.tolist()[i]], id2label[preds[i]])
             print ([vocab.id2word[w] for w in batch.words.view(batch_size, -1)[i].tolist() if w != 0])
             print (reference[0])
