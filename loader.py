@@ -11,6 +11,8 @@ from utils import constant, helper, vocab
 
 from torch_geometric.data import Data, DataLoader
 
+from collections import defaultdict
+
 class BatchLoader(object):
     """
     Load data from json files, preprocess and prepare batches.
@@ -88,6 +90,7 @@ class BatchLoader(object):
         """ Preprocess the data and convert to ids. """
         processed      = []
         processed_rule = []
+        rule_counts = defaultdict(int)
         with open(self.mappings) as f:
             mappings = f.readlines()
         with open('tacred/rules.json') as f:
@@ -138,13 +141,15 @@ class BatchLoader(object):
                 obj_mask = [1 if (i in range(os, oe+1) and i in edge_index[0]+edge_index[1]) else 0 for i in range(len(tokens))]
                 
                 if 't_' in mappings[c] or 's_' in mappings[c]:
+                    rule_counts[rules[eval(mappings[c])[0][1]]] += 1
                     rule = helper.word_tokenize(rules[eval(mappings[c])[0][1]])
                     rule = map_to_ids(rule, vocab.rule2id) 
                     rule = [constant.SOS_ID] + rule + [constant.EOS_ID]
                     processed_rule += [(tokens, pos, ner, deprel, subj_mask, obj_mask, relation, edge_index, edge_mask, rule)]
                 else:
                     processed += [(tokens, pos, ner, deprel, subj_mask, obj_mask, relation, edge_index, edge_mask)]
-        
+        print (json.dumps(rule_counts))
+        exit()
         return processed, processed_rule
 
     def gold(self):
