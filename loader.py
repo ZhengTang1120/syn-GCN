@@ -75,7 +75,6 @@ class BatchLoader(object):
     def preprocess(self, data, vocab, opt):
         """ Preprocess the data and convert to ids. """
         processed      = []
-        processed_rule = []
         rule_counts = defaultdict(int)
         with open(self.mappings) as f:
             mappings = f.readlines()
@@ -119,9 +118,9 @@ class BatchLoader(object):
                     rule = helper.word_tokenize(rules[eval(mappings[c])[0][1]])
                     rule = map_to_ids(rule, vocab.rule2id) 
                     rule = [constant.SOS_ID] + rule + [constant.EOS_ID]
-                    processed_rule += [(tokens, pos, ner, deprel, subj_positions, obj_positions, relation, edge_index, rule)]
+                    processed += [(tokens, pos, ner, deprel, subj_positions, obj_positions, relation, edge_index, rule)]
                 else:
-                    processed += [(tokens, pos, ner, deprel, subj_positions, obj_positions, relation, edge_index)]
+                    processed += [(tokens, pos, ner, deprel, subj_positions, obj_positions, relation, edge_index, [])]
             else:
                 subj_mask = [1 if (i in range(ss, se+1) and i in edge_index[0]+edge_index[1]) else 0 for i in range(len(tokens))]
                 obj_mask = [1 if (i in range(os, oe+1) and i in edge_index[0]+edge_index[1]) else 0 for i in range(len(tokens))]
@@ -143,7 +142,7 @@ class BatchLoader(object):
 
     def __len__(self):
         #return 50
-        return len(self.data)+len(self.data_r)
+        return len(self.data)
 
 def get_positions(start_idx, end_idx, length):
     """ Get subj/obj position sequence. """
