@@ -46,10 +46,7 @@ class BatchLoader(object):
         datalist = list()
         for i, batch in enumerate(data):
             batch = list(zip(*batch))
-            if rule:
-                assert len(batch) == 10
-            else:
-                assert len(batch) == 9
+            assert len(batch) == 10
             
             # word dropout
             if not self.eval:
