@@ -73,7 +73,7 @@ class RelationModel(object):
             output = rules.data[t]
             if self.opt['cuda']:
                 output = output.cuda()
-        loss += loss_d
+        loss += loss_d/max_len
 
         # backward
         loss.backward()
