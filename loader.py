@@ -33,13 +33,13 @@ class BatchLoader(object):
         self.labels = [id2label[d[6]] for d in data]
         self.num_examples = len(data)
 
-        datalist = self.chuck_batch(data, False)
+        datalist = self.chunk_batch(data)
 
         self.data = DataLoader(datalist, batch_size=batch_size)
 
         print("{} batches created for {}".format(len(data), filename))
 
-    def chuck_batch(self, data):
+    def chunk_batch(self, data):
         # chunk into batches
         data     = [data[i:i+self.batch_size] for i in range(0, len(data), self.batch_size)]
         self.raw = data
