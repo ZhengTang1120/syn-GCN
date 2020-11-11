@@ -171,8 +171,9 @@ for epoch in range(1, opt['num_epoch']+1):
                     candidate.append(vocab.id2rule[int(r)])
             # print (reference)
             # print (candidate)
-            references.append(reference)
-            candidates.append(candidate)
+            if len(reference[0])!=0:
+                references.append(reference)
+                candidates.append(candidate)
     predictions = [id2label[p] for p in predictions]
     dev_p, dev_r, dev_f1 = scorer.score(dev_batch.gold(), predictions)
     bleu = corpus_bleu(references, candidates)
