@@ -26,23 +26,20 @@ class BatchLoader(object):
 
         with open(filename) as infile:
             data = json.load(infile)
-        data, data_r = self.preprocess(data, vocab, opt)
+        data = self.preprocess(data, vocab, opt)
         data = sorted(data, key=lambda d: len(d[0]), reverse=True)
-        data_r = sorted(data_r, key=lambda d: len(d[0]), reverse=True)
         
         id2label = dict([(v,k) for k,v in constant.LABEL_TO_ID.items()])
-        self.labels = [id2label[d[6]] for d in data_r]
-        self.num_examples = len(data_r)
+        self.labels = [id2label[d[6]] for d in data]
+        self.num_examples = len(data)
 
         datalist = self.chuck_batch(data, False)
-        datalist_r = self.chuck_batch(data_r, True)
 
         self.data = DataLoader(datalist, batch_size=batch_size)
-        self.data_r = DataLoader(datalist_r, batch_size=batch_size)
 
         print("{} batches created for {}".format(len(data), filename))
 
-    def chuck_batch(self, data, rule):
+    def chuck_batch(self, data):
         # chunk into batches
         data     = [data[i:i+self.batch_size] for i in range(0, len(data), self.batch_size)]
         self.raw = data
@@ -68,21 +65,13 @@ class BatchLoader(object):
             subj_masks = get_long_tensor(batch[4])
             obj_masks = get_long_tensor(batch[5])
             e_masks = get_long_tensor(batch[8])
-            if rule:
-                rules = get_long_tensor(batch[9])
-                for i in range(len(words)):
-                    datalist += [Data(words=words[i], mask=torch.eq(words[i], 0), e_mask = torch.eq(e_masks[i], 0), pos=pos[i], 
-                        ner=ner[i], deprel=deprel[i], d_mask=torch.eq(deprel[i], 0), 
-                        subj_mask=torch.eq(subj_masks[i], 0), obj_mask=torch.eq(obj_masks[i], 0), 
-                        edge_index=torch.LongTensor(batch[7][i]),
-                        rel=torch.LongTensor([batch[6][i]]), rule=rules[i])]
-            else:
-                for i in range(len(words)):
-                    datalist += [Data(words=words[i], mask=torch.eq(words[i], 0), e_mask = torch.eq(e_masks[i], 0), pos=pos[i], 
-                        ner=ner[i], deprel=deprel[i], d_mask=torch.eq(deprel[i], 0), 
-                        subj_mask=torch.eq(subj_masks[i], 0), obj_mask=torch.eq(obj_masks[i], 0), 
-                        edge_index=torch.LongTensor(batch[7][i]),
-                        rel=torch.LongTensor([batch[6][i]]))]
+            rules = get_long_tensor(batch[9])
+            for i in range(len(words)):
+                datalist += [Data(words=words[i], mask=torch.eq(words[i], 0), e_mask = torch.eq(e_masks[i], 0), pos=pos[i], 
+                    ner=ner[i], deprel=deprel[i], d_mask=torch.eq(deprel[i], 0), 
+                    subj_mask=torch.eq(subj_masks[i], 0), obj_mask=torch.eq(obj_masks[i], 0), 
+                    edge_index=torch.LongTensor(batch[7][i]),
+                    rel=torch.LongTensor([batch[6][i]]), rule=rules[i])]
 
         return datalist
 
@@ -145,12 +134,11 @@ class BatchLoader(object):
                     rule = helper.word_tokenize(rules[eval(mappings[c])[0][1]])
                     rule = map_to_ids(rule, vocab.rule2id) 
                     rule = [constant.SOS_ID] + rule + [constant.EOS_ID]
-                    processed_rule += [(tokens, pos, ner, deprel, subj_mask, obj_mask, relation, edge_index, edge_mask, rule)]
+                    # processed_rule += [(tokens, pos, ner, deprel, subj_mask, obj_mask, relation, edge_index, edge_mask, rule)]
                 else:
-                    processed += [(tokens, pos, ner, deprel, subj_mask, obj_mask, relation, edge_index, edge_mask)]
-        print (json.dumps(rule_counts))
-        exit()
-        return processed, processed_rule
+                    rule = []
+                processed += [(tokens, pos, ner, deprel, subj_mask, obj_mask, relation, edge_index, edge_mask, rule)]
+        return processed
 
     def gold(self):
         """ Return gold labels as a list. """

@@ -30,21 +30,19 @@ class RelationModel(object):
             self.criterion_d.cuda()
         self.optimizer = torch_utils.get_optimizer(opt['optim'], self.parameters, opt['lr'])
     
-    def update(self, batch, rule):
+    def update(self, batch):
         """ Run a step of forward and backward model update. """
         inputs = list()
         if self.opt['cuda']:
             for b in constant.KEYS:
                 inputs += [batch[b].cuda()]
             labels = batch.rel.cuda()
-            if rule:
-                rules = batch.rule.cuda()
+            rules = batch.rule.cuda()
         else:
             for b in constant.KEYS:
                 inputs += [batch[b]]
             labels = batch.rel
-            if rule:
-                rules = batch.rule
+            rules = batch.rule
         batch_size = labels.size(0)
         # step forward
         self.classifier.train()
@@ -52,31 +50,30 @@ class RelationModel(object):
         self.optimizer.zero_grad()
         loss = 0
         logits, hidden, pooling_output, encoder_outputs = self.classifier(inputs, batch_size)
-        # loss = self.criterion(logits, labels)
-        # if self.opt.get('conv_l2', 0) > 0:
-        #     loss += self.classifier.conv_l2() * self.opt['conv_l2']
-        # if self.opt.get('pooling_l2', 0) > 0:
-        #     loss += self.opt['pooling_l2'] * (pooling_output ** 2).sum(1).mean()
-        if rule:
-            #DECODER PART
-            rules = rules.view(batch_size, -1)
-            masks = inputs[1]
-            max_len = rules.size(1)
-            rules = rules.transpose(1,0)
-            output = Variable(torch.LongTensor([constant.SOS_ID] * batch_size)) # sos
-            output = output.cuda() if self.opt['cuda'] else output
-            loss_d = 0
-            h0 = hidden.view(self.opt['num_layers'], batch_size, -1)
-            c0 = hidden.view(self.opt['num_layers'], batch_size, -1)
-            decoder_hidden = (h0, c0)
-            for t in range(1, max_len):
-                output, decoder_hidden, attn_weights = self.decoder(
-                        output, masks, decoder_hidden, encoder_outputs)
-                loss_d += self.criterion_d(output, rules[t])
-                output = rules.data[t]
-                if self.opt['cuda']:
-                    output = output.cuda()
-            loss += loss_d
+        loss = self.criterion(logits, labels)
+        if self.opt.get('conv_l2', 0) > 0:
+            loss += self.classifier.conv_l2() * self.opt['conv_l2']
+        if self.opt.get('pooling_l2', 0) > 0:
+            loss += self.opt['pooling_l2'] * (pooling_output ** 2).sum(1).mean()
+        #DECODER PART
+        rules = rules.view(batch_size, -1)
+        masks = inputs[1]
+        max_len = rules.size(1)
+        rules = rules.transpose(1,0)
+        output = Variable(torch.LongTensor([constant.SOS_ID] * batch_size)) # sos
+        output = output.cuda() if self.opt['cuda'] else output
+        loss_d = 0
+        h0 = hidden.view(self.opt['num_layers'], batch_size, -1)
+        c0 = hidden.view(self.opt['num_layers'], batch_size, -1)
+        decoder_hidden = (h0, c0)
+        for t in range(1, max_len):
+            output, decoder_hidden, attn_weights = self.decoder(
+                    output, masks, decoder_hidden, encoder_outputs)
+            loss_d += self.criterion_d(output, rules[t])
+            output = rules.data[t]
+            if self.opt['cuda']:
+                output = output.cuda()
+        loss += loss_d
 
         # backward
         loss.backward()
@@ -86,7 +83,7 @@ class RelationModel(object):
         loss_val = loss.data.item()
         return loss_val
 
-    def predict(self, batch, rule):
+    def predict(self, batch):
         """ Run forward prediction. If unsort is True, recover the original order of the batch. """
         inputs = list()
         if self.opt['cuda']:
@@ -108,24 +105,23 @@ class RelationModel(object):
         probs = F.softmax(logits, dim=1).data.cpu().numpy().tolist()
         predictions = np.argmax(logits.data.cpu().numpy(), axis=1).tolist()
         outputs = None
-        if rule:
-            #DECODER PART
-            masks = inputs[1]
-            output = Variable(torch.LongTensor([constant.SOS_ID] * batch_size)) # sos
-            output = output.cuda() if self.opt['cuda'] else output
-            outputs = torch.zeros(80, batch_size)
-            outputs[0] = output
-            if self.opt['cuda']:
-                    outputs = outputs.cuda()
-            h0 = hidden.view(self.opt['num_layers'], batch_size, -1)
-            c0 = hidden.view(self.opt['num_layers'], batch_size, -1)
-            decoder_hidden = (h0, c0)
-            for t in range(1, 80):
-                output, decoder_hidden, attn_weights = self.decoder(
-                        output, masks, decoder_hidden, encoder_outputs)
-                topv, topi = output.data.topk(1)
-                output = topi.view(-1)
-                outputs[t] = output
+        #DECODER PART
+        masks = inputs[1]
+        output = Variable(torch.LongTensor([constant.SOS_ID] * batch_size)) # sos
+        output = output.cuda() if self.opt['cuda'] else output
+        outputs = torch.zeros(80, batch_size)
+        outputs[0] = output
+        if self.opt['cuda']:
+                outputs = outputs.cuda()
+        h0 = hidden.view(self.opt['num_layers'], batch_size, -1)
+        c0 = hidden.view(self.opt['num_layers'], batch_size, -1)
+        decoder_hidden = (h0, c0)
+        for t in range(1, 80):
+            output, decoder_hidden, attn_weights = self.decoder(
+                    output, masks, decoder_hidden, encoder_outputs)
+            topv, topi = output.data.topk(1)
+            output = topi.view(-1)
+            outputs[t] = output
 
         return predictions, probs, outputs, loss.data.item()
 

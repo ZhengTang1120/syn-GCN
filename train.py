@@ -138,19 +138,10 @@ max_steps = len(train_batch) * opt['num_epoch']
 for epoch in range(1, opt['num_epoch']+1):
     train_loss = 0
     epoch_start_time = time.time()
-    # for batch in train_batch.data:
-    #     start_time = time.time()
-    #     global_step += 1
-    #     loss = model.update(batch, False)
-    #     train_loss += loss
-    #     if global_step % opt['log_step'] == 0:
-    #         duration = time.time() - start_time
-    #         print(format_str.format(datetime.now(), global_step, max_steps, epoch,\
-    #                 opt['num_epoch'], loss, duration, current_lr))
-    for batch in train_batch.data_r:
+    for batch in train_batch.data:
         start_time = time.time()
         global_step += 1
-        loss = model.update(batch, True)
+        loss = model.update(batch)
         train_loss += loss
         if global_step % opt['log_step'] == 0:
             duration = time.time() - start_time
@@ -163,12 +154,8 @@ for epoch in range(1, opt['num_epoch']+1):
     dev_loss = 0
     references = []
     candidates = []
-    # for batch in dev_batch.data:
-    #     preds, _, _, loss = model.predict(batch, False)
-    #     predictions += preds
-    #     dev_loss += loss
-    for batch in dev_batch.data_r:
-        preds, _, outputs, loss = model.predict(batch, True)
+    for batch in dev_batch.data:
+        preds, _, outputs, loss = model.predict(batch)
         predictions += preds
         dev_loss += loss
         batch_size = len(preds)

@@ -59,15 +59,11 @@ predictions = []
 all_probs = []
 references = []
 candidates = []
-# for batch in eval_batch.data:
-#     preds, probs, _ = model.predict(batch, False)
-#     predictions += preds
-#     all_probs += probs
 randomlist = random.sample(range(len(eval_batch.gold())), 20)
-print (randomlist)
+# print (randomlist)
 count = 0
-for batch in eval_batch.data_r:
-    preds, probs, outputs, loss = model.predict(batch, True)
+for batch in eval_batch.data:
+    preds, probs, outputs, loss = model.predict(batch)
     predictions += preds
     all_probs += probs
     batch_size = len(preds)
@@ -81,13 +77,13 @@ for batch in eval_batch.data_r:
                 break
             else:
                 candidate.append(vocab.id2rule[int(r)])
-        if count in randomlist:
-            print (sentence_bleu(reference, candidate))
-            print (id2label[batch.rel.tolist()[i]], id2label[preds[i]])
-            print ([vocab.id2word[w] for w in batch.words.view(batch_size, -1)[i].tolist() if w != 0])
-            print (reference[0])
-            print (candidate)
-            print ()
+        # if count in randomlist:
+        #     print (sentence_bleu(reference, candidate))
+        #     print (id2label[batch.rel.tolist()[i]], id2label[preds[i]])
+        #     print ([vocab.id2word[w] for w in batch.words.view(batch_size, -1)[i].tolist() if w != 0])
+        #     print (reference[0])
+        #     print (candidate)
+        #     print ()
         count += 1
         references.append(reference)
         candidates.append(candidate)
