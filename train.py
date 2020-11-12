@@ -197,7 +197,7 @@ for epoch in range(1, opt['num_epoch']+1):
         current_lr *= opt['lr_decay']
         model.update_lr(current_lr)
 
-    dev_f1_history += [bleu]
+    dev_f1_history += [dev_f1]
     print("")
 
 print("Training ended with {} epochs.".format(epoch))
