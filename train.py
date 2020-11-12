@@ -176,7 +176,7 @@ for epoch in range(1, opt['num_epoch']+1):
                 candidates.append(candidate)
     predictions = [id2label[p] for p in predictions]
     dev_p, dev_r, dev_f1 = scorer.score(dev_batch.gold(), predictions)
-    bleu = corpus_bleu(references, candidates)
+    bleu = 0#corpus_bleu(references, candidates)
     train_loss = train_loss / train_batch.num_examples * opt['batch_size'] # avg loss per batch
     dev_loss = dev_loss / dev_batch.num_examples * opt['batch_size']
     epoch_duration = time.time() - epoch_start_time
